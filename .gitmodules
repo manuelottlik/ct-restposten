@@ -1,0 +1,3 @@
+[submodule "laradock-ct-restpostenregal"]
+	path = laradock-ct-restpostenregal
+	url = https://github.com/laradock/laradock.git
