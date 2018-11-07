@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Room;
+use App\Building;
 use Illuminate\Http\Request;
+use Spatie\QueryBuilder\QueryBuilder;
+use App\Http\Resources\RoomResource;
 
 class RoomController extends Controller
 {
@@ -12,19 +15,14 @@ class RoomController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Building $building)
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return RoomResource::collection(
+            QueryBuilder::for(Room::where('building_id', $building->id))
+                ->allowedIncludes('building')
+                ->allowedFilters('name', 'seats', 'windows')
+                ->get()
+        );
     }
 
     /**
@@ -33,9 +31,19 @@ class RoomController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, Building $building)
     {
-        //
+        $request->validate([
+            "name" => "required|string|min:3|max:255",
+            "seats" => "nullable|integer|min:0",
+            "windows" => "required|boolean"
+        ]);
+
+        $room = new Room($request->input());
+        $room->building_id = $building->id;
+        $room->save();
+
+        return new RoomResource($room);
     }
 
     /**
@@ -44,20 +52,13 @@ class RoomController extends Controller
      * @param  \App\Room  $room
      * @return \Illuminate\Http\Response
      */
-    public function show(Room $room)
+    public function show(Building $building, Room $room)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Room  $room
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Room $room)
-    {
-        //
+        return new RoomResource(
+            QueryBuilder::for(Room::where('id', $room->id))
+                ->allowedFilters('name', 'seats', 'windows')
+                ->first()
+        );
     }
 
     /**
@@ -67,9 +68,18 @@ class RoomController extends Controller
      * @param  \App\Room  $room
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Room $room)
+    public function update(Request $request, Building $building, Room $room)
     {
-        //
+        $request->validate([
+            "name" => "string|min:3|max:255",
+            "seats" => "nullable|integer|min:0",
+            "windows" => "boolean",
+        ]);
+        
+        $room->fill($request->input());
+        $room->save();
+
+        return new RoomResource($room);
     }
 
     /**
@@ -78,8 +88,10 @@ class RoomController extends Controller
      * @param  \App\Room  $room
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Room $room)
+    public function destroy(Building $building, Room $room)
     {
-        //
+        $room->delete();
+
+        return response()->json('Room deleted',200);
     }
 }

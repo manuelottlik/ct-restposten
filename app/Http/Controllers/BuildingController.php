@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Building;
+use App\Http\Resources\BuildingResource;
 use Illuminate\Http\Request;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class BuildingController extends Controller
 {
@@ -14,17 +16,12 @@ class BuildingController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return BuildingResource::collection(
+            QueryBuilder::for((Building::class)) 
+                ->allowedFilters('name', 'levels')
+                ->allowedIncludes('rooms')
+                ->get()
+        );
     }
 
     /**
@@ -35,7 +32,13 @@ class BuildingController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            "name" => "required|string|min:3|max:255",
+            "description" => "nullable|string|max:1000",
+            "levels" => "required|integer|min:0",
+        ]);
+
+        return new BuildingResource(Building::create($request->input()));
     }
 
     /**
@@ -46,18 +49,12 @@ class BuildingController extends Controller
      */
     public function show(Building $building)
     {
-        //
-    }
+        return new BuildingResource(
+            QueryBuilder::for((Building::where('id', $building->id)))
+                ->allowedIncludes('rooms')
+                ->first()
+        );
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Building  $building
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Building $building)
-    {
-        //
     }
 
     /**
@@ -69,7 +66,16 @@ class BuildingController extends Controller
      */
     public function update(Request $request, Building $building)
     {
-        //
+        $request->validate([
+            "name" => "nullable|string|min:3|max:255",
+            "description" => "nullable|string|max:1000",
+            "levels" => "nullable|integer|min:0",
+        ]);
+
+        $building->fill($request->input());
+        $building->save();
+
+        return new BuildingResource($building);
     }
 
     /**
@@ -80,6 +86,9 @@ class BuildingController extends Controller
      */
     public function destroy(Building $building)
     {
-        //
+        \App\Room::where("building_id", $building->id)->delete();
+        $building->delete();
+
+        return response()->json('Building deleted', 200);
     }
 }
