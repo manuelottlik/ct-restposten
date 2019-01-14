@@ -6,10 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Building extends Model
 {
-    public $fillable = ['name', 'description', 'levels'];
-
-    public function rooms()
-    {
-        return $this->hasMany('App\Room');
-    }
+    //
+	public function rooms(){
+	return $this->hasMany('App\Room');
+	}
+	protected $fillable = ['name', 'description'];
 }
