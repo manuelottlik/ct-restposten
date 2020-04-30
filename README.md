@@ -1,3 +1,3 @@
-# Example project for "RESTregal"
+# ct-restposten
 
-Demo project as described here: [ct.de/y3hx](https://ct.de/y3hx). Simple room management application.
+Beispielprojekt zum Artikel "RESTregal" aus c't 2019, Heft 2.
